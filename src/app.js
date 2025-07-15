@@ -2,6 +2,7 @@
 
 import express from 'express'
 import dotenv from 'dotenv'
+import cors from 'cors'                              // ① importamos o middleware CORS
 import expressWinston from 'express-winston'
 import promBundle from 'express-prom-bundle'
 import cron from 'node-cron'
@@ -18,13 +19,26 @@ import recurringRoutes from './routes/recurringTransactions.js'
 // Controller de recorrentes (para o cron)
 import { processDueRecurring } from './controllers/recurringTransactionController.js'
 
-// Carregar variáveis de ambiente
 dotenv.config()
 
 const app = express()
 
 // Body parser para JSON
 app.use(express.json())
+
+// CORS: configura origin(s) permitidas e credentials
+// ② lemos CORS_ORIGIN do .env (ex: "https://meusite.com,https://admin.meusite.com")
+//    ou default pra localhost dev
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+  : ['http://localhost:3000']
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+)
 
 // Monitoramento Prometheus em /metrics
 app.use(
